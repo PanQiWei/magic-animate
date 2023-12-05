@@ -20,12 +20,14 @@ os.makedirs("./demo/tmp", exist_ok=True)
 savedir = f"demo/outputs"
 os.makedirs(savedir, exist_ok=True)
 
+
 def animate(reference_image, motion_sequence, seed, steps, guidance_scale):
     time_str = datetime.datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
     animation_path = f"{savedir}/{time_str}.mp4"
     save_path = "./demo/tmp/input_reference_image.png"
     Image.fromarray(reference_image).save(save_path)
-    command = "python -m demo.animate_dist --reference_image {} --motion_sequence {} --random_seed {} --step {} --guidance_scale {} --save_path {}".format(
+    command = ("python -m demo.animate_dist --reference_image {} --motion_sequence {} --random_seed {} --step {} "
+               "--guidance_scale {} --save_path {}").format(
         save_path,
         motion_sequence,
         seed,
@@ -35,6 +37,7 @@ def animate(reference_image, motion_sequence, seed, steps, guidance_scale):
     )
     run(command, stdout=PIPE, stderr=PIPE, universal_newlines=True, shell=True)
     return animation_path
+
 
 with gr.Blocks() as demo:
 
@@ -53,18 +56,20 @@ with gr.Blocks() as demo:
             </div>
         </div>
         </div>
-        """)
+        """
+    )
     animation = gr.Video(format="mp4", label="Animation Results", autoplay=True)
-    
+
     with gr.Row():
-        reference_image  = gr.Image(label="Reference Image")
-        motion_sequence  = gr.Video(format="mp4", label="Motion Sequence")
-        
+        reference_image = gr.Image(label="Reference Image")
+        motion_sequence = gr.Video(format="mp4", label="Motion Sequence")
+
         with gr.Column():
-            random_seed         = gr.Textbox(label="Random seed", value=1, info="default: -1")
-            sampling_steps      = gr.Textbox(label="Sampling steps", value=25, info="default: 25")
-            guidance_scale      = gr.Textbox(label="Guidance scale", value=7.5, info="default: 7.5")
-            submit              = gr.Button("Animate")
+            random_seed = gr.Textbox(label="Random seed", value=1, info="default: -1")
+            sampling_steps = gr.Textbox(label="Sampling steps", value=25, info="default: 25")
+            guidance_scale = gr.Textbox(label="Guidance scale", value=7.5, info="default: 7.5")
+            submit = gr.Button("Animate")
+
 
     def read_video(video, size=512):
         size = int(size)
@@ -76,11 +81,13 @@ with gr.Blocks() as demo:
         save_path = "./demo/tmp/input_motion_sequence.mp4"
         imageio.mimwrite(save_path, frames, fps=25)
         return save_path
-    
+
+
     def read_image(image, size=512):
         img = np.array(Image.fromarray(image).resize((size, size)))
         return img
-        
+
+
     # when user uploads a new video
     motion_sequence.upload(
         read_video,
@@ -96,7 +103,7 @@ with gr.Blocks() as demo:
     # when the `submit` button is clicked
     submit.click(
         animate,
-        [reference_image, motion_sequence, random_seed, sampling_steps, guidance_scale], 
+        [reference_image, motion_sequence, random_seed, sampling_steps, guidance_scale],
         animation
     )
 
@@ -104,16 +111,17 @@ with gr.Blocks() as demo:
     gr.Markdown("## Examples")
     gr.Examples(
         examples=[
-            ["inputs/applications/source_image/monalisa.png", "inputs/applications/driving/densepose/running.mp4"], 
+            ["inputs/applications/source_image/monalisa.png", "inputs/applications/driving/densepose/running.mp4"],
             ["inputs/applications/source_image/demo4.png", "inputs/applications/driving/densepose/demo4.mp4"],
             ["inputs/applications/source_image/0002.png", "inputs/applications/driving/densepose/demo4.mp4"],
             ["inputs/applications/source_image/dalle2.jpeg", "inputs/applications/driving/densepose/running2.mp4"],
             ["inputs/applications/source_image/dalle8.jpeg", "inputs/applications/driving/densepose/dancing2.mp4"],
-            ["inputs/applications/source_image/multi1_source.png", "inputs/applications/driving/densepose/multi_dancing.mp4"],
+            ["inputs/applications/source_image/multi1_source.png",
+             "inputs/applications/driving/densepose/multi_dancing.mp4"],
         ],
         inputs=[reference_image, motion_sequence],
         outputs=animation,
     )
 
-
-demo.launch(share=True)
+if __name__ == "__main__":
+    demo.launch(share=True)
